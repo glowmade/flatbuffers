@@ -47,6 +47,9 @@ const (
 	// SizeVOffsetT is the byte size of an VOffsetT.
 	// The `VOffsetT` type is aliased (by flatbuffers convention) to uint16.
 	SizeVOffsetT = 2
+
+	// SizeIdentifier is the number of bytes of optional type/file identifier writable during FinishWithID
+	SizeIdentifier = 4
 )
 
 // byteSliceToString converts a []byte to string without a heap allocation.

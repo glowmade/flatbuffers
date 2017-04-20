@@ -1,5 +1,7 @@
 package flatbuffers
 
+import "encoding/binary"
+
 // Builder is a state machine for creating FlatBuffer objects.
 // Use a Builder to construct object(s) starting from leaf nodes.
 //
@@ -539,6 +541,32 @@ func (b *Builder) Slot(slotnum int) {
 func (b *Builder) Finish(rootTable UOffsetT) {
 	b.assertNotNested()
 	b.Prep(b.minalign, SizeUOffsetT)
+	b.PrependUOffsetT(rootTable)
+	b.finished = true
+}
+
+// FinishWithID is Finish variant with identifier embedding before root vt, matching feature in C++ version
+func (b *Builder) FinishWithID(rootTable UOffsetT, typeIdentifier string) {
+	b.assertNotNested()
+
+	hasIdentifier := (typeIdentifier != "")
+
+	additionalBytes := SizeUOffsetT
+	if hasIdentifier {
+		additionalBytes += SizeIdentifier
+	}
+
+	b.Prep(b.minalign, additionalBytes)
+	if hasIdentifier {
+		stringToBytes := []byte(typeIdentifier)
+
+		if hasIdentifier && len(stringToBytes) != SizeIdentifier {
+			panic("Identifier passed to Finish must resolve to 4-byte array")
+		}
+
+		bytesToU32 := binary.LittleEndian.Uint32(stringToBytes)
+		b.PrependUint32(bytesToU32)
+	}
 	b.PrependUOffsetT(rootTable)
 	b.finished = true
 }
